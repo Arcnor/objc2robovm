@@ -1,0 +1,17 @@
+ObjC2RoboVM is a parser that creates RoboVM bindings from CLang AST dumps (not the best idea, but it works surprisingly well)
+
+h3. Example usage
+
+To generate the dumps for the UIKit framework, do (replacing with the correct paths):
+
+@clang -cc1 -triple armv7-apple-ios5.0.0 -ast-dump -fblocks -x objective-c -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/ /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk/System/Library/Frameworks/UIKit.framework/Headers/UIKit.h@
+
+Save the result to a file, and run ObjC2RoboVM:
+
+@ObjC2RoboVM UIKit uikit-dump.txt@
+
+h3. Status
+
+* Currently, bindings are generated as a text dump, no files are created (useful for debugging, very easy to fix)
+* No special cases are handled yet (Maps, Arrays, Lists, NSObject...)
+* Lots of bugs, I'm sure :)

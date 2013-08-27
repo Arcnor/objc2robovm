@@ -1,5 +1,6 @@
 package com.arcnor.objcclang;
 
+import com.arcnor.objcclang.parser.AppleHandler;
 import com.arcnor.objcclang.parser.CLangHandler;
 import com.arcnor.objcclang.parser.CLangTreeParser;
 
@@ -14,7 +15,7 @@ public class Main {
 			return;
 		}
 		CLangTreeParser parser = new CLangTreeParser();
-		CLangHandler parser1 = new CLangHandler(args[0]);
+		CLangHandler parser1 = new AppleHandler(args[0]);
 		parser.parse(new BufferedReader(new FileReader(args[1])), parser1);
 	}
 }

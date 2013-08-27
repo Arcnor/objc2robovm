@@ -116,6 +116,9 @@ public class CLangHandler implements CLangParser {
 				State.SWITCH_STMT, State.CASE_STMT, State.DEFAULT_STMT, State.CALL_EXPR,
 				State.COMPOUND_ASSIGN_OPERATOR, State.G_C_C_ASM_STMT
 		});
+		possibleStates.put(State.G_C_C_ASM_STMT, new State[]{
+				State.DECL_REF_EXPR, State.IMPLICIT_CAST_EXPR
+		});
 		possibleStates.put(State.COMPOUND_ASSIGN_OPERATOR, new State[]{
 				State.DECL_REF_EXPR, State.IMPLICIT_CAST_EXPR, State.ARRAY_SUBSCRIPT_EXPR, State.MEMBER_EXPR, State.PAREN_EXPR
 		});
@@ -135,7 +138,7 @@ public class CLangHandler implements CLangParser {
 		possibleStates.put(State.IMPLICIT_CAST_EXPR, new State[]{
 				State.PAREN_EXPR, State.IMPLICIT_CAST_EXPR, State.DECL_REF_EXPR, State.ARRAY_SUBSCRIPT_EXPR, State.MEMBER_EXPR,
 				State.INTEGER_LITERAL, State.BINARY_OPERATOR, State.C_STYLE_CAST_EXPR, State.UNARY_OPERATOR, State.CALL_EXPR,
-				State.COMPOUND_LITERAL_EXPR, State.UNARY_EXPR_OR_TYPE_TRAIT_EXPR
+				State.COMPOUND_LITERAL_EXPR, State.UNARY_EXPR_OR_TYPE_TRAIT_EXPR, State.CONDITIONAL_OPERATOR
 		});
 		possibleStates.put(State.COMPOUND_LITERAL_EXPR, new State[]{State.INIT_LIST_EXPR});
 		possibleStates.put(State.INIT_LIST_EXPR, new State[]{
@@ -143,7 +146,8 @@ public class CLangHandler implements CLangParser {
 		});
 		possibleStates.put(State.PAREN_EXPR, new State[]{
 				State.BINARY_OPERATOR, State.CONDITIONAL_OPERATOR, State.C_STYLE_CAST_EXPR, State.INTEGER_LITERAL,
-				State.CALL_EXPR, State.DECL_REF_EXPR, State.UNARY_OPERATOR, State.MEMBER_EXPR
+				State.CALL_EXPR, State.DECL_REF_EXPR, State.UNARY_OPERATOR, State.MEMBER_EXPR, State.PAREN_EXPR,
+				State.CHARACTER_LITERAL
 		});
 		possibleStates.put(State.BINARY_OPERATOR, new State[]{
 				State.PAREN_EXPR, State.IMPLICIT_CAST_EXPR, State.INTEGER_LITERAL, State.UNARY_EXPR_OR_TYPE_TRAIT_EXPR,
@@ -181,14 +185,14 @@ public class CLangHandler implements CLangParser {
 		possibleStates.put(State.VAR_DECL, new State[]{
 				State.VISIBILITY_ATTR, State.CALL_EXPR, State.ASM_LABEL_ATTR, State.DEPRECATED_ATTR, State.UNAVAILABLE_ATTR,
 				State.IMPLICIT_CAST_EXPR, State.SHUFFLE_VECTOR_EXPR, State.C_STYLE_CAST_EXPR, State.FULL_COMMENT,
-				State.WEAK_IMPORT_ATTR, State.INIT_LIST_EXPR, State.AVAILABILITY_ATTR
+				State.WEAK_IMPORT_ATTR, State.INIT_LIST_EXPR, State.AVAILABILITY_ATTR, State.PAREN_EXPR
 		});
 		possibleStates.put(State.SHUFFLE_VECTOR_EXPR, new State[]{State.IMPLICIT_CAST_EXPR, State.INTEGER_LITERAL, State.C_STYLE_CAST_EXPR, State.BINARY_OPERATOR});
 		possibleStates.put(State.DECL_STMT, new State[]{State.VAR_DECL, State.RECORD_DECL, State.TYPEDEF_DECL});
 
 		possibleStates.put(State.CONDITIONAL_OPERATOR, new State[]{
 				State.INTEGER_LITERAL, State.IMPLICIT_CAST_EXPR, State.C_STYLE_CAST_EXPR, State.UNARY_OPERATOR,
-				State.PAREN_EXPR, State.CALL_EXPR, State.BINARY_OPERATOR
+				State.PAREN_EXPR, State.CALL_EXPR, State.BINARY_OPERATOR, State.DECL_REF_EXPR
 		});
 		possibleStates.put(State.C_STYLE_CAST_EXPR, new State[]{
 				State.C_STYLE_CAST_EXPR,

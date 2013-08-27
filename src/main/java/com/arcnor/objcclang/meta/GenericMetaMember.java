@@ -1,11 +1,11 @@
 package com.arcnor.objcclang.meta;
 
-public class AppleMetaMember implements Comparable<AppleMetaMember> {
+public abstract class GenericMetaMember implements Comparable<GenericMetaMember> {
 	public String name;
 	public String framework;
 	public String docAbstract, docDiscussion;
 
-	public AppleMetaMember(final String name) {
+	public GenericMetaMember(final String name) {
 		this.name = name;
 	}
 
@@ -15,7 +15,7 @@ public class AppleMetaMember implements Comparable<AppleMetaMember> {
 	}
 
 	@Override
-	public int compareTo(AppleMetaMember o) {
+	public int compareTo(GenericMetaMember o) {
 		return name.compareTo(o.name);
 	}
 }

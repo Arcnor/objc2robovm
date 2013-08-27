@@ -3,9 +3,9 @@ package com.arcnor.objcclang.meta;
 import java.util.*;
 
 // FIXME: Stupid name
-public abstract class AppleMetaMethodPropertyHolder extends AppleMetaMember {
-	public List<AppleMetaMethod> constructors = new ArrayList<AppleMetaMethod>();
-	public List<AppleMetaMethod> methods = new ArrayList<AppleMetaMethod>();
+public abstract class AppleMetaMethodPropertyHolder extends GenericMetaMember {
+	public List<GenericMetaMethod> constructors = new ArrayList<GenericMetaMethod>();
+	public List<GenericMetaMethod> methods = new ArrayList<GenericMetaMethod>();
 	public Map<String, AppleMetaProperty> properties = new HashMap<String, AppleMetaProperty>();
 	public Set<AppleMetaProtocol> protocols = new HashSet<AppleMetaProtocol>();
 
@@ -13,7 +13,7 @@ public abstract class AppleMetaMethodPropertyHolder extends AppleMetaMember {
 		super(name);
 	}
 
-	public void addMethod(AppleMetaMethod method) {
+	public void addMethod(GenericMetaMethod method) {
 		if (method.name.startsWith("init")) {
 			constructors.add(method);
 		} else {

@@ -14,10 +14,10 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 	private String framework;
 	private boolean isFramework;
 
-	private final Map<Long, AppleMetaMember> decls = new HashMap<Long, AppleMetaMember>();
-	private final Map<String, AppleMetaMember> typedefs = new HashMap<String, AppleMetaMember>();
-	private AppleMetaMember lastMetaMember;
-	private AppleMetaMethod lastMetaMethod;
+	private final Map<Long, GenericMetaMember> decls = new HashMap<Long, GenericMetaMember>();
+	private final Map<String, GenericMetaMember> typedefs = new HashMap<String, GenericMetaMember>();
+	private GenericMetaMember lastMetaMember;
+	private GenericMetaMethod lastMetaMethod;
 	private AppleMetaProperty lastMetaProperty;
 
 	public AppleHandler(final String frameworkName) {
@@ -47,32 +47,32 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 				break;
 			}
 			case RECORD_DECL: {
-				createMember(AppleMetaRecord.class, content, !content.endsWith("struct"));
+				createMember(GenericMetaRecord.class, content, !content.endsWith("struct"));
 				break;
 			}
 			case ENUM_DECL: {
-				createMember(AppleMetaEnum.class, content, !content.endsWith(">"));
+				createMember(GenericMetaEnum.class, content, !content.endsWith(">"));
 				break;
 			}
 
 			// Records
 			case FIELD_DECL: {
 				String[] parts = splitNameType(content);
-				AppleMetaField field = new AppleMetaField(parts[0], parts[1]);
-				((AppleMetaRecord) lastMetaMember).fields.add(field);
+				GenericMetaField field = new GenericMetaField(parts[0], parts[1]);
+				((GenericMetaRecord) lastMetaMember).fields.add(field);
 				break;
 			}
 			// Enums
 			case ENUM_CONSTANT_DECL: {
 				String[] parts = splitNameType(content);
-				AppleMetaField field = new AppleMetaField(parts[0], parts[1]);
-				((AppleMetaEnum) lastMetaMember).fields.add(field);
+				GenericMetaField field = new GenericMetaField(parts[0], parts[1]);
+				((GenericMetaEnum) lastMetaMember).fields.add(field);
 				break;
 			}
 			// Records / Enums
 			case TYPEDEF_DECL: {
 				String[] parts = splitNameType(content);
-				if ((lastMetaMember instanceof AppleMetaEnum || lastMetaMember instanceof AppleMetaRecord) && lastMetaMember.name == null) {
+				if ((lastMetaMember instanceof GenericMetaEnum || lastMetaMember instanceof GenericMetaRecord) && lastMetaMember.name == null) {
 					lastMetaMember.name = parts[0];
 				}
 				if (stateMachine.getParentState() == State.TRANSLATION_UNIT_DECL) {
@@ -130,7 +130,7 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 			case PARM_VAR_DECL: {
 				if (lastMetaMethod != null) {
 					String[] parts = splitNameType(content);
-					lastMetaMethod.args.add(new AppleMetaField(parts[0], parts[1]));
+					lastMetaMethod.args.add(new GenericMetaField(parts[0], parts[1]));
 				}
 				break;
 			}
@@ -138,7 +138,7 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 			case OBJ_C_METHOD_DECL: {
 				String[] parts = splitMethodNameType(content);
 				String methodType = parts[0];
-				lastMetaMethod = new AppleMetaMethod(parts[1], parts[2], methodType.charAt(0));
+				lastMetaMethod = new GenericMetaMethod(parts[1], parts[2], methodType.charAt(0));
 				((AppleMetaMethodPropertyHolder) lastMetaMember).addMethod(lastMetaMethod);
 				break;
 			}
@@ -160,7 +160,7 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 				switch (stateMachine.getParentState()) {
 					case ENUM_CONSTANT_DECL:
 						String[] parts = split(content, 0, 1);
-						List<AppleMetaField> fields = ((AppleMetaEnum) lastMetaMember).fields;
+						List<GenericMetaField> fields = ((GenericMetaEnum) lastMetaMember).fields;
 						fields.get(fields.size() - 1).value = Long.valueOf(parts[0]);
 						break;
 				}
@@ -170,8 +170,8 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 		}
 	}
 
-	private AppleMetaMember getOrCreateMember(final Class<? extends AppleMetaMember> clazz, final Long address, final String name) {
-		AppleMetaMember member = decls.get(address);
+	private GenericMetaMember getOrCreateMember(final Class<? extends GenericMetaMember> clazz, final Long address, final String name) {
+		GenericMetaMember member = decls.get(address);
 
 		if (member == null) {
 			member = createMemberFromClass(clazz, name);
@@ -181,11 +181,11 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 		return member;
 	}
 
-	private void createMember(final Class<? extends AppleMetaMember> clazz, final String content) {
+	private void createMember(final Class<? extends GenericMetaMember> clazz, final String content) {
 		createMember(clazz, content, true);
 	}
 
-	private void createMember(final Class<? extends AppleMetaMember> clazz, final String content, final boolean hasName) {
+	private void createMember(final Class<? extends GenericMetaMember> clazz, final String content, final boolean hasName) {
 		String[] parts = split(content, 3, 0);
 		Long address = Long.decode(parts[0]), prevAddress = null;
 		if (parts[1].equals("prev")) {
@@ -215,7 +215,7 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 			}
 		} else {
 			// Member didn't exist, create a new one
-			AppleMetaMember member = createMemberFromClass(clazz, name);
+			GenericMetaMember member = createMemberFromClass(clazz, name);
 			addMemberDecl(member, address, prevAddress);
 		}
 
@@ -225,10 +225,10 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 		}
 	}
 
-	private static final Map<Class<? extends AppleMetaMember>, Constructor<? extends AppleMetaMember>> constructors = new HashMap<Class<? extends AppleMetaMember>, Constructor<? extends AppleMetaMember>>();
+	private static final Map<Class<? extends GenericMetaMember>, Constructor<? extends GenericMetaMember>> constructors = new HashMap<Class<? extends GenericMetaMember>, Constructor<? extends GenericMetaMember>>();
 
-	private AppleMetaMember createMemberFromClass(Class<? extends AppleMetaMember> clazz, String name) {
-		Constructor<? extends AppleMetaMember> constructor;
+	private GenericMetaMember createMemberFromClass(Class<? extends GenericMetaMember> clazz, String name) {
+		Constructor<? extends GenericMetaMember> constructor;
 		try {
 			constructor = constructors.get(clazz);
 			if (constructor == null) {
@@ -247,7 +247,7 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 		return null;
 	}
 
-	private void addMemberDecl(final AppleMetaMember member, final Long address, final Long prevAddress) {
+	private void addMemberDecl(final GenericMetaMember member, final Long address, final Long prevAddress) {
 		lastMetaMember = member;
 		if (prevAddress != null) {
 			lastMetaMember = decls.get(prevAddress);
@@ -270,9 +270,9 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 
 	@Override
 	public void endDocument() {
-		Map<String, AppleMetaMember> interfaces = new HashMap<String, AppleMetaMember>();
-		Map<String, AppleMetaMember> protocols = new HashMap<String, AppleMetaMember>();
-		for (AppleMetaMember metaMember : decls.values()) {
+		Map<String, GenericMetaMember> interfaces = new HashMap<String, GenericMetaMember>();
+		Map<String, GenericMetaMember> protocols = new HashMap<String, GenericMetaMember>();
+		for (GenericMetaMember metaMember : decls.values()) {
 			if (metaMember.name == null) {
 				continue;
 			}
@@ -283,18 +283,18 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 			}
 		}
 
-		final Set<AppleMetaMember> parsed = new HashSet<AppleMetaMember>();
-		for (AppleMetaMember appleMetaMember : decls.values()) {
-			if (parsed.contains(appleMetaMember)) {
+		final Set<GenericMetaMember> parsed = new HashSet<GenericMetaMember>();
+		for (GenericMetaMember GenericMetaMember : decls.values()) {
+			if (parsed.contains(GenericMetaMember)) {
 				continue;
 			}
-			parsed.add(appleMetaMember);
-			if (!expectedFramework.equals(appleMetaMember.framework)) {
+			parsed.add(GenericMetaMember);
+			if (!expectedFramework.equals(GenericMetaMember.framework)) {
 				continue;
 			}
-			if (appleMetaMember instanceof AppleMetaMethodPropertyHolder) {
-				if (appleMetaMember instanceof AppleMetaInterface) {
-					AppleMetaInterface metaInterface = (AppleMetaInterface) appleMetaMember;
+			if (GenericMetaMember instanceof AppleMetaMethodPropertyHolder) {
+				if (GenericMetaMember instanceof AppleMetaInterface) {
+					AppleMetaInterface metaInterface = (AppleMetaInterface) GenericMetaMember;
 					if (metaInterface.parent == null && metaInterface.methods.isEmpty() && metaInterface.properties.isEmpty() && metaInterface.protocols.isEmpty()) {
 						continue;
 					}
@@ -303,13 +303,13 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 					System.out.println(gen.getOutput());
 					System.out.println("***");
 				}
-			} else if (appleMetaMember instanceof AppleMetaEnum) {
-				RoboVMEnumGen gen = new RoboVMEnumGen((AppleMetaEnum) appleMetaMember, interfaces, protocols, typedefs);
+			} else if (GenericMetaMember instanceof GenericMetaEnum) {
+				RoboVMEnumGen gen = new RoboVMEnumGen((GenericMetaEnum) GenericMetaMember, interfaces, protocols, typedefs);
 				System.out.println("***");
 				System.out.println(gen.getOutput());
 				System.out.println("***");
-			} else if (appleMetaMember instanceof AppleMetaRecord) {
-				RoboVMStructGen gen = new RoboVMStructGen((AppleMetaRecord) appleMetaMember, interfaces, protocols, typedefs);
+			} else if (GenericMetaMember instanceof GenericMetaRecord) {
+				RoboVMStructGen gen = new RoboVMStructGen((GenericMetaRecord) GenericMetaMember, interfaces, protocols, typedefs);
 				System.out.println("***");
 				System.out.println(gen.getOutput());
 				System.out.println("***");
@@ -317,8 +317,8 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 		}
 	}
 
-	private void addNamedMember(Map<String, AppleMetaMember> members, AppleMetaMember metaMember) {
-		AppleMetaMember existing = members.get(metaMember.name);
+	private void addNamedMember(Map<String, GenericMetaMember> members, GenericMetaMember metaMember) {
+		GenericMetaMember existing = members.get(metaMember.name);
 		if (existing != null && existing != metaMember) {
 			throw new RuntimeException("A member with the same name already exists! (" + metaMember.name + ")");
 		}

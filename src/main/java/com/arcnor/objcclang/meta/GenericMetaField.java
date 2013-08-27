@@ -1,10 +1,10 @@
 package com.arcnor.objcclang.meta;
 
-public class AppleMetaField extends AppleMetaMember {
+public class GenericMetaField extends GenericMetaMember {
 	public final String type;
 	public Object value;
 
-	public AppleMetaField(final String name, final String type) {
+	public GenericMetaField(final String name, final String type) {
 		super(name);
 		this.type = type;
 	}

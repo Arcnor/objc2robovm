@@ -1,13 +1,13 @@
 package com.arcnor.objcclang.gen;
 
-import com.arcnor.objcclang.meta.AppleMetaField;
-import com.arcnor.objcclang.meta.AppleMetaMember;
+import com.arcnor.objcclang.meta.GenericMetaMember;
+import com.arcnor.objcclang.meta.GenericMetaField;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class AbstractGen<T extends AppleMetaMember> {
+public abstract class AbstractGen<T extends GenericMetaMember> {
 	private static String packagePrefix = "org.robovm.cocoatouch";
 	private StringBuilder sb;
 
@@ -16,12 +16,12 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 	private boolean startLine = true;
 	protected final T metaMember;
 
-	private final Map<String, AppleMetaMember> memberDecls;
-	private final Map<String, AppleMetaMember> protocolDecls;
-	private final Map<String, AppleMetaMember> typedefs;
-	protected Map<String, AppleMetaMember> usedMembers = new HashMap<String, AppleMetaMember>();
+	private final Map<String, GenericMetaMember> memberDecls;
+	private final Map<String, GenericMetaMember> protocolDecls;
+	private final Map<String, GenericMetaMember> typedefs;
+	protected Map<String, GenericMetaMember> usedMembers = new HashMap<String, GenericMetaMember>();
 
-	protected AbstractGen(T metaMember, Map<String, AppleMetaMember> memberDecls, Map<String, AppleMetaMember> protocolDecls, Map<String, AppleMetaMember> typedefs) {
+	protected AbstractGen(T metaMember, Map<String, GenericMetaMember> memberDecls, Map<String, GenericMetaMember> protocolDecls, Map<String, GenericMetaMember> typedefs) {
 		this.metaMember = metaMember;
 		this.memberDecls = memberDecls;
 		this.protocolDecls = protocolDecls;
@@ -60,11 +60,11 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 			return;
 		}
 
-		ArrayList<AppleMetaMember> members = new ArrayList<AppleMetaMember>(usedMembers.values());
+		ArrayList<GenericMetaMember> members = new ArrayList<GenericMetaMember>(usedMembers.values());
 		Collections.sort(members);
 
 		boolean added = false;
-		for (AppleMetaMember member : members) {
+		for (GenericMetaMember member : members) {
 			if (!member.framework.equalsIgnoreCase(metaMember.framework)) {
 				added = true;
 				_("import ")._(packagePrefix)._('.')._(member.framework.toLowerCase())._('.')._(member.name)._(';')._nl();
@@ -127,7 +127,7 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 		return selectorName;
 	}
 
-	protected void addDoc(AppleMetaMember member) {
+	protected void addDoc(GenericMetaMember member) {
 		_("/**")._nl();
 		if (member.docAbstract != null) {
 			_(" * ")._(member.docAbstract)._nl();
@@ -141,13 +141,13 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 		_(" */")._nl();
 	}
 
-	protected LinkedHashMap<String, String> objc2javatypeMap(Collection<AppleMetaField> arguments) {
+	protected LinkedHashMap<String, String> objc2javatypeMap(Collection<GenericMetaField> arguments) {
 		if (arguments == null || arguments.isEmpty()) {
 			return null;
 		}
 		LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
 		int idx = 1;
-		for (AppleMetaField argument : arguments) {
+		for (GenericMetaField argument : arguments) {
 			String name = argument.name;
 			if (result.containsKey(name)) {
 				System.err.println("WARNING: Duplicated argument '" + argument.name + "'");
@@ -235,23 +235,23 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 				}
 				return sb.toString();
 			} else {
-				AppleMetaMember member = addMemberUsage(type, refType);
+				GenericMetaMember member = addMemberUsage(type, refType);
 				return member != null ? fullyQualify(member) : type;
 			}
 		}
 	}
 
 	private String protocol2javatype(String type) {
-		AppleMetaMember member = addMemberProtocolUsage(type);
+		GenericMetaMember member = addMemberProtocolUsage(type);
 		return member != null ? fullyQualify(member) : type;
 	}
 
-	protected String fullyQualify(AppleMetaMember member) {
+	protected String fullyQualify(GenericMetaMember member) {
 		return packagePrefix + '.' + member.name;
 	}
 
-	protected AppleMetaMember addMemberProtocolUsage(String type) {
-		AppleMetaMember member;
+	protected GenericMetaMember addMemberProtocolUsage(String type) {
+		GenericMetaMember member;
 		if (protocolDecls.containsKey(type)) {
 			member = protocolDecls.get(type);
 		} else {
@@ -260,8 +260,8 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 		return addMemberUsage(member);
 	}
 
-	protected AppleMetaMember addMemberUsage(String type, String refType) {
-		AppleMetaMember member = null;
+	protected GenericMetaMember addMemberUsage(String type, String refType) {
+		GenericMetaMember member = null;
 		if (memberDecls.containsKey(type)) {
 			member = memberDecls.get(type);
 		} else if (typedefs.containsKey(type)) {
@@ -275,7 +275,7 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 		return addMemberUsage(member);
 	}
 
-	private AppleMetaMember addMemberUsage(AppleMetaMember member) {
+	private GenericMetaMember addMemberUsage(GenericMetaMember member) {
 		// FIXME: Check that members are also equals (framework, type, whatever...)
 		if (usedMembers.containsKey(member.name) && usedMembers.get(member.name) != member) {
 			// Member is already used somewhere else, we need to fully qualify it!
@@ -309,13 +309,13 @@ public abstract class AbstractGen<T extends AppleMetaMember> {
 	}
 
 	// FIXME: Bad signature (qualifyAsProtocols), but we're working on it...
-	protected void joinNames(Collection<? extends AppleMetaMember> members, boolean qualifyAsProtocols) {
+	protected void joinNames(Collection<? extends GenericMetaMember> members, boolean qualifyAsProtocols) {
 		boolean first = true;
 
 		final Set<String> argNames = new HashSet<String>();
 		int idx = 1;
 
-		for (AppleMetaMember member : members) {
+		for (GenericMetaMember member : members) {
 			if (first) {
 				first = false;
 			} else {

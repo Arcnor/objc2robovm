@@ -1,14 +1,14 @@
 package com.arcnor.objcclang.gen;
 
-import com.arcnor.objcclang.meta.AppleMetaEnum;
-import com.arcnor.objcclang.meta.AppleMetaField;
-import com.arcnor.objcclang.meta.AppleMetaMember;
+import com.arcnor.objcclang.meta.GenericMetaEnum;
+import com.arcnor.objcclang.meta.GenericMetaField;
+import com.arcnor.objcclang.meta.GenericMetaMember;
 
 import java.util.List;
 import java.util.Map;
 
-public class RoboVMEnumGen extends AbstractGen<AppleMetaEnum> {
-	public RoboVMEnumGen(AppleMetaEnum meta, Map<String, AppleMetaMember> memberDecls, Map<String, AppleMetaMember> protocolDecls, Map<String, AppleMetaMember> typedefs) {
+public class RoboVMEnumGen extends AbstractGen<GenericMetaEnum> {
+	public RoboVMEnumGen(GenericMetaEnum meta, Map<String, GenericMetaMember> memberDecls, Map<String, GenericMetaMember> protocolDecls, Map<String, GenericMetaMember> typedefs) {
 		super(meta, memberDecls, protocolDecls, typedefs);
 	}
 
@@ -21,10 +21,10 @@ public class RoboVMEnumGen extends AbstractGen<AppleMetaEnum> {
 	@Override
 	protected void generateBodyDecl() {
 		_("public enum ")._(metaMember.name)._(" implements ValuedEnum ")._brace();
-		List<AppleMetaField> fields = metaMember.fields;
+		List<GenericMetaField> fields = metaMember.fields;
 		int size = fields.size();
 		for (int j = 0; j < size; j++) {
-			AppleMetaField field = fields.get(j);
+			GenericMetaField field = fields.get(j);
 			if (field.value == null) {
 				System.err.println("WARNING: Value not present for field " + field.name + " in class " + metaMember.name);
 				return;

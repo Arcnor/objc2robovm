@@ -2,7 +2,7 @@ package com.arcnor.objcclang.meta;
 
 import com.arcnor.objcclang.gen.Utils;
 
-public class AppleMetaProperty extends AppleMetaField {
+public class AppleMetaProperty extends GenericMetaField {
 	public final String modifiers;
 	private final boolean readOnly;
 	public String getter;

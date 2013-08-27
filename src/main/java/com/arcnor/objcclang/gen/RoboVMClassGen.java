@@ -1,9 +1,9 @@
 package com.arcnor.objcclang.gen;
 
 import com.arcnor.objcclang.meta.AppleMetaInterface;
-import com.arcnor.objcclang.meta.AppleMetaMember;
-import com.arcnor.objcclang.meta.AppleMetaMethod;
 import com.arcnor.objcclang.meta.AppleMetaProperty;
+import com.arcnor.objcclang.meta.GenericMetaMember;
+import com.arcnor.objcclang.meta.GenericMetaMethod;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,7 +13,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 	private static final String SEL_ARG = "__cmd__";
 	public static final String RETURN_TYPE_ARG = "*RETURNTYPE*";
 
-	public RoboVMClassGen(AppleMetaInterface meta, Map<String, AppleMetaMember> memberDecls, Map<String, AppleMetaMember> protocolDecls, Map<String, AppleMetaMember> typedefs) {
+	public RoboVMClassGen(AppleMetaInterface meta, Map<String, GenericMetaMember> memberDecls, Map<String, GenericMetaMember> protocolDecls, Map<String, GenericMetaMember> typedefs) {
 		super(meta, memberDecls, protocolDecls, typedefs);
 	}
 
@@ -73,7 +73,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 		_("public ")._(metaMember.name)._("() {}")._nl();
 
 		_nl();
-		for (AppleMetaMethod constructor : metaMember.constructors) {
+		for (GenericMetaMethod constructor : metaMember.constructors) {
 			String selectorName = registerSelector(constructor.name);
 			String javaMethodName = getJavaMethodName(constructor.name);
 			LinkedHashMap<String,String> types = objc2javatypeMap(constructor.args);
@@ -96,7 +96,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 	}
 
 	private void addMethods() {
-		for (AppleMetaMethod method : metaMember.methods) {
+		for (GenericMetaMethod method : metaMember.methods) {
 			LinkedHashMap<String, String> args = objc2javatypeMap(method.args);
 			if (args == null) {
 				args = new LinkedHashMap<String, String>();
@@ -152,14 +152,14 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 	private void addCallbacks() {
 		_("static class Callbacks ")._brace();
 
-		for (AppleMetaMethod method : metaMember.methods) {
+		for (GenericMetaMethod method : metaMember.methods) {
 			addCallback(method);
 		}
 
 		_braceEnd()._nl();
 	}
 
-	private void addCallback(AppleMetaMethod method) {
+	private void addCallback(GenericMetaMethod method) {
 		LinkedHashMap<String, String> args = objc2javatypeMap(method.args);
 		if (args == null) {
 			args = new LinkedHashMap<String, String>();
@@ -199,7 +199,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 	}
 
 	private void addParentConstructors(AppleMetaInterface parent) {
-		for (AppleMetaMethod constructor : parent.constructors) {
+		for (GenericMetaMethod constructor : parent.constructors) {
 			LinkedHashMap<String, String> args = objc2javatypeMap(constructor.args);
 			_("public ")._(metaMember.name)._('(');
 			joinNameTypes(args);

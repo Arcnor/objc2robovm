@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RoboVMStructGen extends AbstractGen<GenericMetaRecord> {
+public class RoboVMStructGen extends RoboVMAbstractGen<GenericMetaRecord> {
 	public RoboVMStructGen(GenericMetaRecord meta, Map<String, GenericMetaMember> memberDecls, Map<String, GenericMetaMember> protocolDecls, Map<String, GenericMetaMember> typedefs) {
 		super(meta, memberDecls, protocolDecls, typedefs);
 	}
@@ -23,7 +23,7 @@ public class RoboVMStructGen extends AbstractGen<GenericMetaRecord> {
 	@Override
 	protected void generateBodyDecl() {
 		final List<GenericMetaField> fields = metaMember.fields;
-		LinkedHashMap<String,String> types = objc2javatypeMap(fields);
+		LinkedHashMap<String,String> types = clang2javatypeMap(fields);
 
 		_("public final class ")._(metaMember.name)._(" extends Struct<")._(metaMember.name)._("> ")._brace();
 

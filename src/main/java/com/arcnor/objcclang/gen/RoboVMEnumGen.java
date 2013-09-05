@@ -7,7 +7,7 @@ import com.arcnor.objcclang.meta.GenericMetaMember;
 import java.util.List;
 import java.util.Map;
 
-public class RoboVMEnumGen extends AbstractGen<GenericMetaEnum> {
+public class RoboVMEnumGen extends RoboVMAbstractGen<GenericMetaEnum> {
 	public RoboVMEnumGen(GenericMetaEnum meta, Map<String, GenericMetaMember> memberDecls, Map<String, GenericMetaMember> protocolDecls, Map<String, GenericMetaMember> typedefs) {
 		super(meta, memberDecls, protocolDecls, typedefs);
 	}

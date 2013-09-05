@@ -80,12 +80,12 @@ public class CLangTreeParser {
 			Path p = f.getCanonicalFile().toPath();
 			String path = p.toString();
 			if (!path.contains(".framework")) {
-				parser.setFramework(p.getName(p.getNameCount() - 2).toString(), false);
+				parser.setLibrary(p.getName(p.getNameCount() - 2).toString(), false);
 			} else {
 				for (int j = p.getNameCount() - 1; j > 0; j--) {
 					String part = p.getName(j).toString();
 					if (part.contains(".framework")) {
-						parser.setFramework(part.substring(0, part.indexOf('.')), true);
+						parser.setLibrary(part.substring(0, part.indexOf('.')), true);
 						break;
 					}
 				}

@@ -15,5 +15,5 @@ public interface CLangParser {
 	 * @param framework
 	 * @param isFramework true if this is a framework name (ends with .framework), false otherwise
 	 */
-	void setFramework(String framework, boolean isFramework);
+	void setLibrary(String framework, boolean isFramework);
 }

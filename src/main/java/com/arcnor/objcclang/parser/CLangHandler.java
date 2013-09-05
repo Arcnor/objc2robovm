@@ -1,9 +1,20 @@
 package com.arcnor.objcclang.parser;
 
+import com.arcnor.objcclang.meta.GenericMetaMember;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class CLangHandler implements CLangParser {
+	protected String library;
+	protected boolean isFramework;
+
+	protected final Map<Long, GenericMetaMember> decls = new HashMap<Long, GenericMetaMember>();
+
+	protected GenericMetaMember lastMetaMember;
+
 	protected enum State implements NamedEnum {
 		START(""), NULL("<<<NULL>>>"), VARARG("..."), TRANSLATION_UNIT_DECL, TYPEDEF_DECL, RECORD_DECL, VAR_DECL, ENUM_DECL,
 		FIELD_DECL, FUNCTION_DECL, PARM_VAR_DECL, COMPOUND_STMT, RETURN_STMT, IMPLICIT_CAST_EXPR, PAREN_EXPR,
@@ -99,7 +110,7 @@ public abstract class CLangHandler implements CLangParser {
 		possibleStates.put(State.COMPOUND_STMT, new State[]{
 				State.RETURN_STMT, State.DECL_STMT, State.BINARY_OPERATOR, State.IF_STMT,
 				State.SWITCH_STMT, State.CASE_STMT, State.DEFAULT_STMT, State.CALL_EXPR,
-				State.COMPOUND_ASSIGN_OPERATOR, State.G_C_C_ASM_STMT
+				State.COMPOUND_ASSIGN_OPERATOR, State.G_C_C_ASM_STMT, State.DO_STMT
 		});
 		possibleStates.put(State.G_C_C_ASM_STMT, new State[]{
 				State.DECL_REF_EXPR, State.IMPLICIT_CAST_EXPR
@@ -107,14 +118,16 @@ public abstract class CLangHandler implements CLangParser {
 		possibleStates.put(State.COMPOUND_ASSIGN_OPERATOR, new State[]{
 				State.DECL_REF_EXPR, State.IMPLICIT_CAST_EXPR, State.ARRAY_SUBSCRIPT_EXPR, State.MEMBER_EXPR, State.PAREN_EXPR
 		});
-		possibleStates.put(State.SWITCH_STMT, new State[]{State.NULL, State.IMPLICIT_CAST_EXPR, State.COMPOUND_STMT});
-		possibleStates.put(State.CASE_STMT, new State[]{State.NULL, State.DECL_REF_EXPR, State.RETURN_STMT});
+		possibleStates.put(State.SWITCH_STMT, new State[]{State.NULL, State.IMPLICIT_CAST_EXPR, State.COMPOUND_STMT, State.BINARY_OPERATOR});
+		possibleStates.put(State.CASE_STMT, new State[]{
+				State.NULL, State.DECL_REF_EXPR, State.RETURN_STMT, State.IMPLICIT_CAST_EXPR, State.DO_STMT, State.BINARY_OPERATOR
+		});
 		possibleStates.put(State.DEFAULT_STMT, new State[]{State.BREAK_STMT});
 		possibleStates.put(State.IF_STMT, new State[]{
 				State.NULL, State.BINARY_OPERATOR, State.RETURN_STMT, State.IMPLICIT_CAST_EXPR, State.COMPOUND_STMT,
 				State.CALL_EXPR, State.DO_STMT
 		});
-		possibleStates.put(State.DO_STMT, new State[]{State.COMPOUND_STMT, State.INTEGER_LITERAL});
+		possibleStates.put(State.DO_STMT, new State[]{State.COMPOUND_STMT, State.INTEGER_LITERAL, State.UNARY_OPERATOR});
 		possibleStates.put(State.RETURN_STMT, new State[]{
 				State.IMPLICIT_CAST_EXPR, State.CALL_EXPR, State.PAREN_EXPR, State.CONDITIONAL_OPERATOR, State.OBJ_C_MESSAGE_EXPR,
 				State.BINARY_OPERATOR, State.C_STYLE_CAST_EXPR, State.INTEGER_LITERAL, State.DECL_REF_EXPR, State.SHUFFLE_VECTOR_EXPR
@@ -170,7 +183,7 @@ public abstract class CLangHandler implements CLangParser {
 		possibleStates.put(State.VAR_DECL, new State[]{
 				State.VISIBILITY_ATTR, State.CALL_EXPR, State.ASM_LABEL_ATTR, State.DEPRECATED_ATTR, State.UNAVAILABLE_ATTR,
 				State.IMPLICIT_CAST_EXPR, State.SHUFFLE_VECTOR_EXPR, State.C_STYLE_CAST_EXPR, State.FULL_COMMENT,
-				State.WEAK_IMPORT_ATTR, State.INIT_LIST_EXPR, State.AVAILABILITY_ATTR, State.PAREN_EXPR
+				State.WEAK_IMPORT_ATTR, State.INIT_LIST_EXPR, State.AVAILABILITY_ATTR, State.PAREN_EXPR, State.BINARY_OPERATOR
 		});
 		possibleStates.put(State.SHUFFLE_VECTOR_EXPR, new State[]{State.IMPLICIT_CAST_EXPR, State.INTEGER_LITERAL, State.C_STYLE_CAST_EXPR, State.BINARY_OPERATOR});
 		possibleStates.put(State.DECL_STMT, new State[]{State.VAR_DECL, State.RECORD_DECL, State.TYPEDEF_DECL});
@@ -219,6 +232,87 @@ public abstract class CLangHandler implements CLangParser {
 				State.TEXT_COMMENT, State.H_T_M_L_START_TAG_COMMENT, State.H_T_M_L_END_TAG_COMMENT, State.INLINE_COMMAND_COMMENT
 		});
 		possibleStates.put(State.VERBATIM_BLOCK_COMMENT, new State[]{State.VERBATIM_BLOCK_LINE_COMMENT});
+	}
+
+	protected <T extends GenericMetaMember> T getOrCreateMember(final Class<T> clazz, final Long address, final String name) {
+		T member = (T) decls.get(address);
+
+		if (member == null) {
+			member = createMemberFromClass(clazz, name);
+			decls.put(address, member);
+		}
+
+		return member;
+	}
+
+	protected void createMember(final Class<? extends GenericMetaMember> clazz, final String content) {
+		createMember(clazz, content, true);
+	}
+
+	protected <T extends GenericMetaMember> void createMember(final Class<T> clazz, final String content, final boolean hasName) {
+		String[] parts = split(content, 3, 0);
+		Long address = Long.decode(parts[0]), prevAddress = null;
+		if (parts[1].equals("prev")) {
+			prevAddress = Long.decode(parts[2]);
+		}
+		String name = null;
+		if (hasName) {
+			String[] nameType = splitNameType(content);
+			name = nameType[0];
+		}
+		if (name != null) {
+			if (name.contains(":")) {
+				throw new RuntimeException("Bad name for member (contains ':')");
+			}
+			if ("struct".equals(name)) {
+				name = null;
+			} else if ("union".equals(name)) {
+				name = null;
+			}
+		}
+		// This member can exist already (we used it in some class before declaring it)
+		if (name != null && decls.containsKey(address)) {
+			// We update the address with the existing one
+			addMemberDecl(decls.get(address), address, prevAddress);
+			if (lastMetaMember.name == null) {
+				lastMetaMember.name = name;
+			}
+		} else {
+			// Member didn't exist, create a new one
+			T member = createMemberFromClass(clazz, name);
+			addMemberDecl(member, address, prevAddress);
+		}
+	}
+
+	private static final Map<Class<? extends GenericMetaMember>, Constructor<? extends GenericMetaMember>> constructors = new HashMap<Class<? extends GenericMetaMember>, Constructor<? extends GenericMetaMember>>();
+
+	private <T extends GenericMetaMember> T createMemberFromClass(Class<T> clazz, String name) {
+		Constructor<? extends GenericMetaMember> constructor;
+		try {
+			constructor = constructors.get(clazz);
+			if (constructor == null) {
+				constructor = clazz.getConstructor(String.class);
+				constructors.put(clazz, constructor);
+			}
+			return (T) constructor.newInstance(name);
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private void addMemberDecl(final GenericMetaMember member, final Long address, final Long prevAddress) {
+		lastMetaMember = member;
+		if (prevAddress != null) {
+			lastMetaMember = decls.get(prevAddress);
+		}
+		decls.put(address, lastMetaMember);
 	}
 
 	protected String[] splitProperty(final String content) {
@@ -308,4 +402,10 @@ public abstract class CLangHandler implements CLangParser {
 		return result;
 	}
 
+	@Override
+	public void setLibrary(final String library, boolean isFramework) {
+		this.library = library.intern();
+		// TODO: Maybe we can remove this boolean to be totally ObjC agnostic (and just check the ending of the library string itself)
+		this.isFramework = isFramework;
+	}
 }

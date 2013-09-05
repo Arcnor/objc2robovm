@@ -8,7 +8,7 @@ import com.arcnor.objcclang.meta.GenericMetaMethod;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
+public class RoboVMClassGen extends RoboVMAbstractGen<AppleMetaInterface> {
 	private static final String SELF_ARG = "__self__";
 	private static final String SEL_ARG = "__cmd__";
 	public static final String RETURN_TYPE_ARG = "*RETURNTYPE*";
@@ -31,10 +31,10 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 
 	@Override
 	protected void generateBodyDecl() {
-		_("@Library(\"")._(metaMember.framework)._("\");")._nl();
+		_("@Library(\"")._(metaMember.library)._("\");")._nl();
 		_("@NativeClass public class ")._(metaMember.name)._nl();
 		if (metaMember.parent != null) {
-			_("\textends ")._(objc2javatype(metaMember.parent.name))._nl();
+			_("\textends ")._(clang2javatype(metaMember.parent.name))._nl();
 		}
 		if (!metaMember.protocols.isEmpty()) {
 			_("\timplements ");
@@ -76,7 +76,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 		for (GenericMetaMethod constructor : metaMember.constructors) {
 			String selectorName = registerSelector(constructor.name);
 			String javaMethodName = getJavaMethodName(constructor.name);
-			LinkedHashMap<String,String> types = objc2javatypeMap(constructor.args);
+			LinkedHashMap<String,String> types = clang2javatypeMap(constructor.args);
 			msgSend(javaMethodName, "@Pointer long", false, "", types);
 
 			_nl();
@@ -97,11 +97,11 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 
 	private void addMethods() {
 		for (GenericMetaMethod method : metaMember.methods) {
-			LinkedHashMap<String, String> args = objc2javatypeMap(method.args);
+			LinkedHashMap<String, String> args = clang2javatypeMap(method.args);
 			if (args == null) {
 				args = new LinkedHashMap<String, String>();
 			}
-			args.put(RETURN_TYPE_ARG, objc2javatype(method.type));
+			args.put(RETURN_TYPE_ARG, clang2javatype(method.type));
 			String generics = processGenerics(args);
 			String methodType = args.remove(RETURN_TYPE_ARG);
 
@@ -160,11 +160,11 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 	}
 
 	private void addCallback(GenericMetaMethod method) {
-		LinkedHashMap<String, String> args = objc2javatypeMap(method.args);
+		LinkedHashMap<String, String> args = clang2javatypeMap(method.args);
 		if (args == null) {
 			args = new LinkedHashMap<String, String>();
 		}
-		args.put(RETURN_TYPE_ARG, objc2javatype(method.type));
+		args.put(RETURN_TYPE_ARG, clang2javatype(method.type));
 		String generics = processGenerics(args);
 		String methodType = args.remove(RETURN_TYPE_ARG);
 
@@ -200,7 +200,7 @@ public class RoboVMClassGen extends AbstractGen<AppleMetaInterface> {
 
 	private void addParentConstructors(AppleMetaInterface parent) {
 		for (GenericMetaMethod constructor : parent.constructors) {
-			LinkedHashMap<String, String> args = objc2javatypeMap(constructor.args);
+			LinkedHashMap<String, String> args = clang2javatypeMap(constructor.args);
 			_("public ")._(metaMember.name)._('(');
 			joinNameTypes(args);
 			_(") ")._brace();

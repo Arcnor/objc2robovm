@@ -2,7 +2,7 @@ package com.arcnor.objcclang.meta;
 
 public abstract class GenericMetaMember implements Comparable<GenericMetaMember> {
 	public String name;
-	public String framework;
+	public String library;
 	public String docAbstract, docDiscussion;
 
 	public GenericMetaMember(final String name) {

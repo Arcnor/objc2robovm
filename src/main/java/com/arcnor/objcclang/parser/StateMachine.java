@@ -37,13 +37,13 @@ public class StateMachine<S extends NamedEnum> {
 			}
 			sb.append(']');
 			String expected = sb.toString();
-			throw new RuntimeException(String.format("Not a valid XML file (expected '%1$s', got '%2$s' for '%3$s')", expected, qName, state.getName()));
+			throw new RuntimeException(String.format("Not a valid XML file (\n\texpected '%1$s',\n\tgot '%2$s'\n\tfor '%3$s')", expected, qName, state.getName()));
 		}
 	}
 
 	public void popState(String qName) {
 		if (!state.getName().equals(qName)) {
-			throw new RuntimeException(String.format("Not a valid XML file (expected '%1$s', got '%2$s')", qName, state.getName()));
+			throw new RuntimeException(String.format("Not a valid XML file (\n\texpected '%1$s',\n\tgot '%2$s')", qName, state.getName()));
 		}
 		state = states.pop();
 	}

@@ -11,6 +11,11 @@ public class CLangTreeParser {
 	private String lastState;
 
 	private Stack<String> state = new Stack<String>();
+	private boolean frameworkSupport;
+
+	public CLangTreeParser(final boolean frameworkSupport) {
+		this.frameworkSupport = frameworkSupport;
+	}
 
 	public void parse(BufferedReader r, CLangParser parser) throws IOException {
 		parser.startDocument();
@@ -56,10 +61,12 @@ public class CLangTreeParser {
 			if (buf.length < 2) {
 				System.out.println("WHAT!");
 			}
-			int fileStartIdx = line.indexOf('<');
-			if (fileStartIdx >= 0) {
-				int fileEndIdx = line.indexOf('>');
-				extractFramework(line.substring(fileStartIdx + 1, fileEndIdx), parser);
+			if (frameworkSupport) {
+				int fileStartIdx = line.indexOf('<');
+				if (fileStartIdx >= 0) {
+					int fileEndIdx = line.indexOf('>');
+					extractFramework(line.substring(fileStartIdx + 1, fileEndIdx), parser);
+				}
 			}
 			parser.startElement(lastState, buf[1], lineNum);
 		}

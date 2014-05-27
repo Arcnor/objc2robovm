@@ -14,7 +14,7 @@ public class CMain {
 			System.err.println("Usage: Objc2RoboVM <Framework Name> <Framework AST Dump>");
 			return;
 		}
-		CLangTreeParser parser = new CLangTreeParser();
+		CLangTreeParser parser = new CLangTreeParser(false);
 		CLangHandler parser1 = new CHandler(args[0]);
 		parser.parse(new BufferedReader(new FileReader(args[1])), parser1);
 	}

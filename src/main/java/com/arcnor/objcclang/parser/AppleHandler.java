@@ -24,8 +24,8 @@ public class AppleHandler extends CLangHandler implements CLangParser {
 	}
 
 	@Override
-	public void startElement(final String tag, final String content) {
-		stateMachine.pushState(tag);
+	public void startElement(final String tag, final String content, int lineNum) {
+		stateMachine.pushState(tag, lineNum);
 
 		switch (stateMachine.getState()) {
 			case OBJ_C_INTERFACE_DECL: {

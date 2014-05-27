@@ -26,8 +26,8 @@ public class CHandler extends CLangHandler {
 	}
 
 	@Override
-	public void startElement(String tag, String content) {
-		stateMachine.pushState(tag);
+	public void startElement(String tag, String content, int lineNum) {
+		stateMachine.pushState(tag, lineNum);
 
 		switch (stateMachine.getState()) {
 			case FUNCTION_DECL: {

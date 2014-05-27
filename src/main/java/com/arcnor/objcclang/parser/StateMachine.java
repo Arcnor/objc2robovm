@@ -1,5 +1,6 @@
 package com.arcnor.objcclang.parser;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Stack;
 
@@ -13,10 +14,10 @@ public class StateMachine<S extends NamedEnum> {
 		this.possibleStates = possibleStates;
 	}
 
-	public void pushState(String qName) {
+	public void pushState(String qName, int lineNum) {
 		S[] newStates = possibleStates.get(state);
 		if (newStates == null) {
-			throw new RuntimeException(String.format("Unhandled state '%1$s' (got '%2$s')", state.getName(), qName));
+			throw new RuntimeException(String.format("Unhandled state '%1$s' (got '%2$s') : %3$d", state.getName(), qName, lineNum));
 		}
 
 		boolean found = newStates.length == 0;
@@ -37,7 +38,7 @@ public class StateMachine<S extends NamedEnum> {
 			}
 			sb.append(']');
 			String expected = sb.toString();
-			throw new RuntimeException(String.format("Not a valid XML file (\n\texpected '%1$s',\n\tgot '%2$s'\n\tfor '%3$s')", expected, qName, state.getName()));
+			throw new RuntimeException(String.format("Not a valid XML file (\n\texpected '%1$s',\n\tgot '%2$s'\n\tfor '%3$s') : %4$d", expected, qName, state.getName(), lineNum));
 		}
 	}
 

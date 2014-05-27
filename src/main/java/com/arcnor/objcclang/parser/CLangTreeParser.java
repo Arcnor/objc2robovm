@@ -16,7 +16,9 @@ public class CLangTreeParser {
 		parser.startDocument();
 
 		String line;
+		int lineNum = 0;
 		while ((line = r.readLine()) != null) {
+			lineNum++;
 			if (line.endsWith("<<<NULL>>>")) {
 				line += " 0x0";
 			} else if (line.endsWith("-...")) {
@@ -59,7 +61,7 @@ public class CLangTreeParser {
 				int fileEndIdx = line.indexOf('>');
 				extractFramework(line.substring(fileStartIdx + 1, fileEndIdx), parser);
 			}
-			parser.startElement(lastState, buf[1]);
+			parser.startElement(lastState, buf[1], lineNum);
 		}
 		parser.endElement(lastState);
 		while (!state.isEmpty()) {

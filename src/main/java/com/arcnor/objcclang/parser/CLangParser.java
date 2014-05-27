@@ -3,7 +3,7 @@ package com.arcnor.objcclang.parser;
 public interface CLangParser {
 	void startDocument();
 
-	void startElement(String tag, final String content);
+	void startElement(String tag, final String content, int lineNum);
 
 	void endElement(String tag);
 
